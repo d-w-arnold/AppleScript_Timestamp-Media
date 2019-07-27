@@ -2,16 +2,24 @@
 
 An AppleScript for renaming all image and video files, in a specified folder, by their creation date.
 
-Uses the EXIF creation date meta-data stored for each file.
+Uses the EXIF (Exchangeable Image File) creation date meta-data stored for each file.
 
 ### How to run this AppleScript:
 
-1) Open the "Terminal.app" application.
+1) Click "Clone or download" (top right), and unzip the downloaded zip file.
 
-2) Run the command: (the "#" represents the Command Line prompt)
+(Optional) Click on "Timestamp-Media.scpt", and click "View raw", this will download just the AppleScript file.
 
-`# osascript *Path_to_AppleScript* *Absolute_path_to_folder*`
+2) Open the "Terminal.app" application.
+
+3) Run the command: (do not type the "#", as this represents the Command Line prompt)
+
+`# osascript *1* *2*`
+
+`*1*` - Path to the AppleScript file.
+
+`*2*` - (Absolute) Path to the folder to be modified by the AppleScript.
 
 For example:
 
-`# osascript ~/test.scpt /User/John/Desktop/test`
+`# osascript ~/Timestamp-Media.scpt /User/John/Desktop/test`
