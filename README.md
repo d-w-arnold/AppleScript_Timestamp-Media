@@ -1,4 +1,4 @@
-# AppleScript: Timestamp-Media
+# AppleScript Timestamp Media
 
 An AppleScript for renaming image and video files by their creation date, within a specific folder.
 
