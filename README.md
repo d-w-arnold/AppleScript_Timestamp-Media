@@ -1,6 +1,6 @@
 # AppleScript Timestamp Media
 
-An AppleScript for renaming image and video files by their creation date, within a specific folder.
+Rename image and video files by their creation date, within a specific folder.
 
 Uses the EXIF (Exchangeable Image File) creation date meta-data stored for each file.
 
@@ -12,14 +12,12 @@ Uses the EXIF (Exchangeable Image File) creation date meta-data stored for each 
 
 3. Run the following:
 
-    (Do not type the `foo@bar:~$`, as this represents the Command Line prompt)
-
     `*1*` - Path to the AppleScript file.
 
     `*2*` - (Absolute) Path to the folder to be modified by the AppleScript.
 
     ```console
-    foo@bar:~$ osascript *1* *2*
+    osascript *1* *2*
     ```
 
     When the AppleScript has finished successfully, a message will be returned to the standard output:
@@ -29,6 +27,8 @@ Uses the EXIF (Exchangeable Image File) creation date meta-data stored for each 
     ```
 
     Examples:
+
+    (Do not type the `foo@bar:~$`, as this represents the Command Line prompt)
 
     ```console
     foo@bar:~$ osascript ./Timestamp-Media.scpt /User/John/Desktop
