@@ -1,0 +1,178 @@
+on run input -- "input" is an absolute path to a folder.
+	
+	-- List of file extensions, which are to be renamed with timestamps.
+	set validExtensions to {"jpeg", "jpg", "tif", "tiff", "png", "gif", "bmp", "pbm", "pgm", "ppm", "xcf", "webp", "hdr", "heif", "heic", "spiff", "bpg", "cgm", "gbr", "svg", "pdf", "mpo", "pns", "jps", "ico", "webm", "mpg", "mp2", "mpeg", "mpe", "mpv", "ogg", "mp4", "m4p", "m4v", "avi", "wmv", "mov", "qt", "flv", "swf"}
+	
+	-- Set error messages.
+	set errorMsg to "Please specify a valid (absolute) path to the folder to be modified by the AppleScript:" & return & return & "# osascript *1* *2*" & return & return & "*1* - Path to the AppleScript file." & return & "*2* - (Absolute) Path to a folder to be modified by the AppleScript." & return & return & "For example:" & return & return & "# osascript ~/Timestamp-Media.scpt /User/John/Desktop/test"
+	
+	-- Converts the input to text.
+	set folderPath to (input as text)
+	
+	-- Checks if an input has been provided.
+	if (count of folderPath) > 0 then
+		
+		-- Concatenates a "/" to the end of the input, if not present.
+		if (text -1 of folderPath) is not equal to "/" then
+			
+			set folderPath to (folderPath & "/")
+			
+		end if
+		
+		-- Checks if input is a directory, "isDirectory(...)" defined at bottom of page.
+		set isDirectoryCheck to isDirectory(folderPath)
+		
+		tell application "Finder"
+			
+			-- If the path defined by "input": 1) exists and 2) is a directory, then continue with the renaming.
+			if (exists (folderPath as POSIX file)) and isDirectoryCheck then
+				
+				-- Create a list of all the files in the target .
+				set theFileList to every file of folder (folderPath as POSIX file) as alias list
+				
+				-- For each file in the folder.
+				repeat with theFile in theFileList
+					
+					-- Used later for any duplicate files. Resets for each file in the folder.
+					set counter to 1
+					
+					-- If the file extension, of the file, matches with one of the entries in "validExtensions", then continue with the renaming.
+					if (name extension of theFile) is in validExtensions then
+						
+						-- The timestamp for the creation date of the file.
+						set timestamp to (do shell script "mdls -name kMDItemContentCreationDate -raw " & quoted form of (POSIX path of theFile))
+						
+						-- A formatted timestamp is required.
+						set needFormattedTimestamp to true
+						
+						try
+							
+							-- Produces a 24-hour formatted version, of the timestamp (e.g. "2019-07-25 13:14:50 +0000" -> "2019-07-25 13:14:50").
+							set formattedTimestamp to (do shell script "date -j -f '%Y-%m-%d %H:%M:%S %z' '" & timestamp & "' '+%Y-%m-%d %H:%M:%S'")
+							
+							-- We've acquired a timestamp with a 24-hour timestamp.
+							set needFormattedTimestamp to false
+							
+						end try
+						
+						if needFormattedTimestamp then
+							
+							-- We haven't been able to acquire a 24-hour timestamp, it must be a 12-hour timestamp.
+							try
+								
+								-- Produces a 12-hour formatted version, of the timestamp (e.g. "2019-07-25 1:14:50 pm +0000" -> "2019-07-25 13:14:50").
+								set formattedTimestamp to (do shell script "date -j -f '%Y-%m-%d %l:%M:%S %p %z' '" & timestamp & "' '+%Y-%m-%d %H:%M:%S'")
+								
+							end try
+							
+						end if
+						
+						-- The file extension of the file (e.g. ".jpg").
+						set fileExtension to ("." & (name extension of theFile))
+						
+						-- Length of the file name without extension (e.g. "Hello.jpg" = 5, "test.jpg" = 4).
+						set lengthOfNameWithoutExtension to (length of (name of theFile as text)) - ((length of (name extension of theFile as text)) + 1)
+						
+						-- Alternate formatted version, of the timestamp, with "/" instead of ":".
+						set altFormattedTimestamp to (do shell script "date -j -f '%Y-%m-%d %H:%M:%S' '" & formattedTimestamp & "' '+%Y-%m-%d %H/%M/%S'")
+						
+						-- Checks to see if a file of the same timestamp and file extension, in the same folder, exists before the file is renamed.
+						if (exists (folderPath & formattedTimestamp & fileExtension) as POSIX file) and ((name of theFile) is not equal to (altFormattedTimestamp & fileExtension)) then
+							
+							-- A file of the same timestamp and extension exists.
+							set exist to true
+							
+							repeat while exist is equal to true
+								
+								-- Make sure not to clash with any other already existing duplicates.
+								if (exists (folderPath & formattedTimestamp & " (" & counter & ")" & fileExtension) as POSIX file) and ((name of theFile) is not equal to (altFormattedTimestamp & " (" & counter & ")" & fileExtension)) then
+									
+									set counter to (counter + 1)
+									
+								else
+									
+									-- Name the file as an appropriate duplicate (e.g. "2019-07-25 13:14:50 (1).jpg").
+									set name of theFile to (formattedTimestamp & " (" & counter & ")" & fileExtension)
+									
+									set exist to false
+									
+								end if
+								
+							end repeat
+							
+						else
+							
+							-- A file of the same timestamp and extension does not exist.
+							-- Name the file with the timestamp and extension (e.g. "2019-07-25 13:14:50.jpg").
+							set name of theFile to (formattedTimestamp & fileExtension)
+							
+						end if
+						
+					end if
+					
+				end repeat
+				
+				return "AppleScript complete!"
+			else
+				
+				-- The "input" does not define a valid absolute path to a folder.
+				tell application "System Events"
+					
+					set theResp to display dialog errorMsg buttons {"OK"} default button 1
+					
+					return "AppleScript not complete."
+					
+				end tell
+				
+			end if
+			
+		end tell
+		
+	else
+		
+		-- No "input" provided.
+		tell application "System Events"
+			
+			set theResp to display dialog errorMsg buttons {"OK"} default button 1
+			
+			return "AppleScript not complete."
+			
+		end tell
+		
+	end if
+	
+end run
+
+on isDirectory(someItem) -- "someItem" is as text.
+	
+	set filePosixPath to quoted form of (POSIX path of someItem)
+	
+	set fileType to (do shell script "file -b " & filePosixPath)
+	
+	if fileType ends with "directory" then
+		
+		true
+		
+	else
+		
+		false
+		
+	end if
+	
+end isDirectory
+
+on findAndReplaceInText(theText, theSearchString, theReplacementString)
+	
+	set AppleScript's text item delimiters to theSearchString
+	
+	set theTextItems to every text item of theText
+	
+	set AppleScript's text item delimiters to theReplacementString
+	
+	set theText to theTextItems as string
+	
+	set AppleScript's text item delimiters to ""
+	
+	theText
+	
+end findAndReplaceInText
